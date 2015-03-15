@@ -88,11 +88,11 @@ BYTE PowerFlag = 0;     /* indicates if "power" is on */
 static
 void xmit_spi (BYTE dat)
 {
-//    DWORD rcvdat;
-//
-//    SSIDataPut(SDC_SSI_BASE, dat); /* Write the data to the tx fifo */
-//
-//    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* flush data read during the write */
+    DWORD rcvdat;
+
+    SSIDataPut(SDC_SSI_BASE, dat); /* Write the data to the tx fifo */
+
+    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* flush data read during the write */
 }
 
 
@@ -104,11 +104,11 @@ static
 BYTE rcvr_spi (void)
 {
     DWORD rcvdat = 0xFF;
-//
-//    SSIDataPut(SDC_SSI_BASE, 0xFF); /* write dummy data */
-//
-//    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* read data frm rx fifo */
-//
+
+    SSIDataPut(SDC_SSI_BASE, 0xFF); /* write dummy data */
+
+    SSIDataGet(SDC_SSI_BASE, &rcvdat); /* read data frm rx fifo */
+
     return (BYTE)rcvdat;
 }
 

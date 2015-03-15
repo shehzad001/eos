@@ -637,6 +637,10 @@ typedef  struct  os_tcb              OS_TCB;
 
 typedef  struct  os_rdy_list         OS_RDY_LIST;
 
+#if OS_CFG_EDF_LIST_EN > 0u
+typedef  struct  os_edf_list         OS_EDF_LIST;
+#endif
+
 typedef  struct  os_tick_spoke       OS_TICK_SPOKE;
 
 typedef  void                      (*OS_TMR_CALLBACK_PTR)(void *p_tmr, void *p_arg);
@@ -697,6 +701,20 @@ struct  os_rdy_list {
     OS_OBJ_QTY           NbrEntries;                        /* Number of entries             at selected priority     */
 };
 
+
+/*
+------------------------------------------------------------------------------------------------------------------------
+*                                                      EDF LIST
+------------------------------------------------------------------------------------------------------------------------
+*/
+
+#if OS_CFG_EDF_LIST_EN > 0u
+struct os_edf_list {
+    OS_TCB              *HeadPtr;                           /* Pointer to task that will run at selected deadline     */
+    OS_TCB              *TailPtr;                           /* Pointer to last task          at selected deadline     */
+    OS_OBJ_QTY           NbrEntries;                        /* Number of entries in EDF List                          */
+};
+#endif
 
 /*
 ------------------------------------------------------------------------------------------------------------------------
@@ -909,7 +927,7 @@ struct os_tcb {
     OS_PRIO              Prio;                              /* Task priority (0 == highest)                           */
     CPU_STK_SIZE         StkSize;                           /* Size of task stack (in number of stack elements)       */
     OS_OPT               Opt;                               /* Task options as passed by OSTaskCreate()               */
-
+    
     OS_OBJ_QTY           PendDataTblEntries;                /* Size of array of objects to pend on                    */
 
     CPU_TS               TS;                                /* Timestamp                                              */
@@ -1129,10 +1147,13 @@ OS_EXT            OS_OBJ_QTY             OSQQty;                      /* Number 
 #endif
 
 
-
                                                                       /* READY LIST --------------------------------- */
 OS_EXT            OS_RDY_LIST            OSRdyList[OS_CFG_PRIO_MAX];  /* Table of tasks ready to run                  */
 
+
+#if OS_CFG_EDF_LIST_EN > 0u                                           /* EDF LIST ----------------------------------- */
+OS_EXT            OS_EDF_LIST           *OSEdfList;                   /* Start of EDF List -------------------------- */
+#endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
 OS_EXT            CPU_BOOLEAN            OSSafetyCriticalStartFlag;   /* Flag indicating that all init. done          */

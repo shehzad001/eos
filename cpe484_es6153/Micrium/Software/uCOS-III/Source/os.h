@@ -329,6 +329,7 @@ extern "C" {
 #define  OS_OPT_TASK_STK_CHK                 (OS_OPT)(0x0001u)  /* Enable stack checking for the task                 */
 #define  OS_OPT_TASK_STK_CLR                 (OS_OPT)(0x0002u)  /* Clear the stack when the task is create            */
 #define  OS_OPT_TASK_SAVE_FP                 (OS_OPT)(0x0004u)  /* Save the contents of any floating-point registers  */
+#define  OS_OPT_EDF_LIST                     (OS_OPT)(0x0008u)  /* Option to opt for an EDF List                      */
 
 /*
 ------------------------------------------------------------------------------------------------------------------------
@@ -998,6 +999,10 @@ struct os_tcb {
     OS_TCB              *DbgNextPtr;
     CPU_CHAR            *DbgNamePtr;
 #endif
+
+#if OS_CFG_EDF_LIST_EN > 0u
+    OS_TICK              Deadline;
+#endif
 };
 
 /*$PAGE*/
@@ -1152,7 +1157,7 @@ OS_EXT            OS_RDY_LIST            OSRdyList[OS_CFG_PRIO_MAX];  /* Table o
 
 
 #if OS_CFG_EDF_LIST_EN > 0u                                           /* EDF LIST ----------------------------------- */
-OS_EXT            OS_EDF_LIST           *OSEdfList;                   /* Start of EDF List -------------------------- */
+OS_EXT            OS_EDF_LIST            OSEdfList;                   /* Start of EDF List -------------------------- */
 #endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
@@ -1626,6 +1631,7 @@ void          OSTaskCreate              (OS_TCB                *p_tcb,
                                          OS_TICK                time_quanta,
                                          void                  *p_ext,
                                          OS_OPT                 opt,
+                                         OS_TICK        TaskDeadline,
                                          OS_ERR                *p_err);
 
 #if OS_CFG_TASK_DEL_EN > 0u
@@ -2042,6 +2048,10 @@ void          OS_RdyListInsertTail      (OS_TCB                *p_tcb);
 void          OS_RdyListMoveHeadToTail  (OS_RDY_LIST           *p_rdy_list);
 
 void          OS_RdyListRemove          (OS_TCB                *p_tcb);
+
+/* ---------------------------------------------- EDF LIST MANAGEMENT ----------------------------------------------- */
+
+void          OS_EdfListInit            (void);
 
 /* ---------------------------------------------- PEND LIST MANAGEMENT ---------------------------------------------- */
 

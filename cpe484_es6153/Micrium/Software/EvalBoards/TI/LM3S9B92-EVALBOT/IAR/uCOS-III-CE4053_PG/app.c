@@ -157,6 +157,7 @@ int  main (void)
                  (OS_TICK     ) 0u,
                  (void       *) (CPU_INT32U) 0, 
                  (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+                 (OS_TICK     ) 0u,
                  (OS_ERR     *)&err);
 
     OSStart(&err);                                              /* Start multitasking (i.e. give control to uC/OS-III). */
@@ -219,20 +220,20 @@ static  void  AppTaskStart (void  *p_arg)
    // OSMutexCreate((OS_MUTEX *)&MutexThree, (CPU_CHAR *)3, (OS_ERR *)&err);
 
     /* Initialise the 3 Main Tasks to  Deleted State */
-    OSTaskCreate((OS_TCB     *)&AppTaskOneTCB, (CPU_CHAR   *)"App Task One", (OS_TASK_PTR ) AppTaskOne, (void       *) 0, (OS_PRIO     ) APP_TASK_ONE_PRIO, (CPU_STK    *)&AppTaskOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *)(CPU_INT32U) 1, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+    OSTaskCreate((OS_TCB     *)&AppTaskOneTCB, (CPU_CHAR   *)"App Task One", (OS_TASK_PTR ) AppTaskOne, (void       *) 0, (OS_PRIO     ) APP_TASK_ONE_PRIO, (CPU_STK    *)&AppTaskOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *)(CPU_INT32U) 1, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
     OSTaskDel((OS_TCB *)&AppTaskOneTCB, &err);
-    OSTaskCreate((OS_TCB     *)&AppTaskTwoTCB, (CPU_CHAR   *)"App Task Two", (OS_TASK_PTR ) AppTaskTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_TWO_PRIO, (CPU_STK    *)&AppTaskTwoStk[0], (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 2, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+    OSTaskCreate((OS_TCB     *)&AppTaskTwoTCB, (CPU_CHAR   *)"App Task Two", (OS_TASK_PTR ) AppTaskTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_TWO_PRIO, (CPU_STK    *)&AppTaskTwoStk[0], (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 2, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
     OSTaskDel((OS_TCB *)&AppTaskTwoTCB, &err);
-    OSTaskCreate((OS_TCB     *)&AppTaskThreeTCB, (CPU_CHAR   *)"App Task Three", (OS_TASK_PTR ) AppTaskThree, (void       *) 0, (OS_PRIO     ) APP_TASK_THREE_PRIO, (CPU_STK    *)&AppTaskThreeStk[0], (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 3, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+    OSTaskCreate((OS_TCB     *)&AppTaskThreeTCB, (CPU_CHAR   *)"App Task Three", (OS_TASK_PTR ) AppTaskThree, (void       *) 0, (OS_PRIO     ) APP_TASK_THREE_PRIO, (CPU_STK    *)&AppTaskThreeStk[0], (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 3, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
     OSTaskDel((OS_TCB *)&AppTaskThreeTCB, &err);
 
     /* Start!! */
     BSP_DisplayStringDraw("Go",0u, 1u);
     
     /* Tasks that recreate the 3 main tasks */
-    OSTaskCreate((OS_TCB     *)&AppTaskRepeatOneTCB, (CPU_CHAR   *)"Repeat Task One", (OS_TASK_PTR ) AppTaskRepeatOne, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_ONE_PRIO, (CPU_STK    *)&AppTaskRepeatOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 1, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
-   OSTaskCreate((OS_TCB     *)&AppTaskRepeatTwoTCB, (CPU_CHAR   *)"Repeat Task Two", (OS_TASK_PTR ) AppTaskRepeatTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_TWO_PRIO, (CPU_STK    *)&AppTaskRepeatTwoStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 2, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
-    OSTaskCreate((OS_TCB    *)&AppTaskRepeatThreeTCB, (CPU_CHAR   *)"Repeat Task Three", (OS_TASK_PTR ) AppTaskRepeatThree, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_THREE_PRIO, (CPU_STK    *)&AppTaskRepeatThreeStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 3, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+    OSTaskCreate((OS_TCB     *)&AppTaskRepeatOneTCB, (CPU_CHAR   *)"Repeat Task One", (OS_TASK_PTR ) AppTaskRepeatOne, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_ONE_PRIO, (CPU_STK    *)&AppTaskRepeatOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 1, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
+   OSTaskCreate((OS_TCB     *)&AppTaskRepeatTwoTCB, (CPU_CHAR   *)"Repeat Task Two", (OS_TASK_PTR ) AppTaskRepeatTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_TWO_PRIO, (CPU_STK    *)&AppTaskRepeatTwoStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 2, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
+    OSTaskCreate((OS_TCB    *)&AppTaskRepeatThreeTCB, (CPU_CHAR   *)"Repeat Task Three", (OS_TASK_PTR ) AppTaskRepeatThree, (void       *) 0, (OS_PRIO     ) APP_TASK_REPEAT_THREE_PRIO, (CPU_STK    *)&AppTaskRepeatThreeStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) 3, (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
      
     /* Delete this task */
     OSTaskDel((OS_TCB *)0, &err);
@@ -255,7 +256,7 @@ static  void  AppTaskRepeatOne (void  *p_arg)
         if(AppTaskOneTCB.TaskState == OS_TASK_STATE_DEL)
         {
           //BSP_DisplayStringDraw("C1",0u, 0u);
-          OSTaskCreate((OS_TCB     *)&AppTaskOneTCB, (CPU_CHAR   *)"App Task One", (OS_TASK_PTR ) AppTaskOne, (void       *) 0, (OS_PRIO     ) APP_TASK_ONE_PRIO, (CPU_STK    *)&AppTaskOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK1PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+          OSTaskCreate((OS_TCB     *)&AppTaskOneTCB, (CPU_CHAR   *)"App Task One", (OS_TASK_PTR ) AppTaskOne, (void       *) 0, (OS_PRIO     ) APP_TASK_ONE_PRIO, (CPU_STK    *)&AppTaskOneStk[0], (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_ONE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK1PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
         //  measure=OS_TS_GET();
           OSQPend(&DummyQ, (TASK1PERIOD * 1000), OS_OPT_PEND_BLOCKING, &msg_size, &ts, &err);
 
@@ -284,7 +285,7 @@ static  void  AppTaskRepeatTwo (void  *p_arg)
         if(AppTaskTwoTCB.TaskState == OS_TASK_STATE_DEL)
         {
           //BSP_DisplayStringDraw("C2",0u, 0u);
-          OSTaskCreate((OS_TCB     *)&AppTaskTwoTCB, (CPU_CHAR   *)"App Task Two", (OS_TASK_PTR ) AppTaskTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_TWO_PRIO, (CPU_STK    *)&AppTaskTwoStk[0], (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK2PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+          OSTaskCreate((OS_TCB     *)&AppTaskTwoTCB, (CPU_CHAR   *)"App Task Two", (OS_TASK_PTR ) AppTaskTwo, (void       *) 0, (OS_PRIO     ) APP_TASK_TWO_PRIO, (CPU_STK    *)&AppTaskTwoStk[0], (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_TWO_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK2PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
           OSQPend(&DummyQ, (TASK2PERIOD * 1000), OS_OPT_PEND_BLOCKING, &msg_size, &ts, &err);
         }
         else
@@ -310,7 +311,7 @@ static  void  AppTaskRepeatThree (void  *p_arg)
         if(AppTaskThreeTCB.TaskState == OS_TASK_STATE_DEL)
         {
           //BSP_DisplayStringDraw("C3",0u, 0u);
-          OSTaskCreate((OS_TCB     *)&AppTaskThreeTCB, (CPU_CHAR   *)"App Task Three", (OS_TASK_PTR ) AppTaskThree, (void       *) 0, (OS_PRIO     ) APP_TASK_THREE_PRIO, (CPU_STK    *)&AppTaskThreeStk[0], (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK3PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_ERR     *)&err);
+          OSTaskCreate((OS_TCB     *)&AppTaskThreeTCB, (CPU_CHAR   *)"App Task Three", (OS_TASK_PTR ) AppTaskThree, (void       *) 0, (OS_PRIO     ) APP_TASK_THREE_PRIO, (CPU_STK    *)&AppTaskThreeStk[0], (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE / 10u, (CPU_STK_SIZE) APP_TASK_THREE_STK_SIZE, (OS_MSG_QTY  ) 0u, (OS_TICK     ) 0u, (void       *) (CPU_INT32U) (TASK3PERIOD*i), (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR), (OS_TICK     ) 0u, (OS_ERR     *)&err);
           OSQPend(&DummyQ, (TASK3PERIOD * 1000), OS_OPT_PEND_BLOCKING, &msg_size, &ts, &err);
         }
         else

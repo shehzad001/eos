@@ -111,4 +111,8 @@
 #define  OS_CFG_TASK_LOG_EN             1u
 #define  OS_CFG_TASK_LOG_LEN            32u
 
+                                             /* ------------------------- EDF LIST MANAGEMENT -------------------------- */
+#define  OS_CFG_EDF_LIST_EN             1u
+#define  OS_CFG_EDF_LIST_PRIO           5u
+
 #endif

@@ -115,6 +115,10 @@ void  OSInit (OS_ERR  *p_err)
 
     OS_RdyListInit();                                       /* Initialize the Ready List                              */
 
+#if OS_CFG_EDF_LIST_EN > 0u
+    OS_EdfListInit();
+#endif
+
     OS_TaskInit(p_err);                                     /* Initialize the task manager                            */
     if (*p_err != OS_ERR_NONE) {
         return;
@@ -837,6 +841,7 @@ void  OS_IdleTaskInit (OS_ERR  *p_err)
                  (OS_TICK     )0u,
                  (void       *)0,
                  (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+                 (OS_TICK     )0u,
                  (OS_ERR     *)p_err);
 }
 
@@ -2641,3 +2646,56 @@ void   OS_TaskRdy (OS_TCB *p_tcb)
         OS_RdyListInsert(p_tcb);                            /* Insert the task in the ready list                      */
     }
 }
+
+/*$PAGE*/
+/*
+************************************************************************************************************************
+*                                                    INITIALIZATION
+*                                               READY LIST INITIALIZATION
+*
+* Description: This function is called by OSInit() to initialize the ready list.  The ready list contains a list of all
+*              the tasks that are ready to run.  The list is actually an array of OS_RDY_LIST.  An OS_RDY_LIST contains
+*              three fields.  The number of OS_TCBs in the list (i.e. .NbrEntries), a pointer to the first OS_TCB in the
+*              OS_RDY_LIST (i.e. .HeadPtr) and a pointer to the last OS_TCB in the OS_RDY_LIST (i.e. .TailPtr).
+*
+*              OS_TCBs are doubly linked in the OS_RDY_LIST and each OS_TCB points pack to the OS_RDY_LIST it belongs
+*              to.
+*
+*              'OS_RDY_LIST  OSRdyTbl[OS_CFG_PRIO_MAX]'  looks like this once initialized:
+*
+*                               +---------------+--------------+
+*                               |               | TailPtr      |-----> 0
+*                          [0]  | NbrEntries=0  +--------------+
+*                               |               | HeadPtr      |-----> 0
+*                               +---------------+--------------+
+*                               |               | TailPtr      |-----> 0
+*                          [1]  | NbrEntries=0  +--------------+
+*                               |               | HeadPtr      |-----> 0
+*                               +---------------+--------------+
+*                                       :              :
+*                                       :              :
+*                                       :              :
+*                               +---------------+--------------+
+*                               |               | TailPtr      |-----> 0
+*          [OS_CFG_PRIO_MAX-1]  | NbrEntries=0  +--------------+
+*                               |               | HeadPtr      |-----> 0
+*                               +---------------+--------------+
+*
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Note(s)    : This function is INTERNAL to uC/OS-III and your application should not call it.
+************************************************************************************************************************
+*/
+
+#if OS_CFG_EDF_LIST_EN > 0u
+void  OS_EdfListInit (void)
+{
+    /* Initialize the array of OS_RDY_LIST at each priority   */
+    OSEdfList.HeadPtr    = (OS_TCB   *)0;
+    OSEdfList.TailPtr    = (OS_TCB   *)0;
+    OSEdfList.NbrEntries = (OS_OBJ_QTY)0;
+}
+#endif

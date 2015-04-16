@@ -304,6 +304,19 @@ void  OSIntExit (void)
 
     OSPrioHighRdy   = OS_PrioGetHighest();                  /* Find highest priority                                  */
     OSTCBHighRdyPtr = OSRdyList[OSPrioHighRdy].HeadPtr;     /* Get highest priority task ready-to-run                 */
+
+#if OS_CFG_EDF_LIST_EN > 0u
+/* Beacuse the EDF List is not a task that is added in the ReadyList therefore manually assigning
+*  OSPrioHighRdy and OSTCBHighRdyPtr to the task with least Deadline in thr EDFList...
+*/
+    if(OSEdfList.NbrEntries > (OS_OBJ_QTY)0u){              /* List is not Empty...                                    */
+      if(OSPrioHighRdy > (OS_PRIO)OS_CFG_EDF_LIST_PRIO){    /* less than EDFList Priority...                           */
+        OSPrioHighRdy = (OS_PRIO)OS_CFG_EDF_LIST_PRIO;
+        OSTCBHighRdyPtr = OSEdfList.HeadPtr;
+      }
+    }
+#endif
+
     if (OSTCBHighRdyPtr == OSTCBCurPtr) {                   /* Current task still the highest priority?               */
         CPU_INT_EN();                                       /* Yes                                                    */
         return;
@@ -314,14 +327,14 @@ void  OSIntExit (void)
       (OSTCBHighRdyPtr != &OSTickTaskTCB) && \
       (OSTCBHighRdyPtr != &OSTmrTaskTCB)){
         
-      if(OSTaskLogCtr >= OS_CFG_TASK_LOG_LEN){
+      if(OSTaskLogCtr >= OS_CFG_TASK_LOG_BUFFER_SIZE){
         OSTaskLogCtr = 0;
       }
 
       // Log starts from index 1
       OSTaskLogCtr++;
       OSTaskLogPtr[OSTaskLogCtr].TaskTCB = OSTCBHighRdyPtr;
-      OSTaskLogPtr[OSTaskLogCtr].TCBName = OSTCBHighRdyPtr->NamePtr;
+//      OSTaskLogPtr[OSTaskLogCtr].TCBName = OSTCBHighRdyPtr->NamePtr;
       OSTaskLogPtr[OSTaskLogCtr].TickCtr = OSTickCtr;
     }
 #endif
@@ -393,6 +406,19 @@ void  OSSched (void)
     CPU_INT_DIS();
     OSPrioHighRdy   = OS_PrioGetHighest();                  /* Find the highest priority ready                        */
     OSTCBHighRdyPtr = OSRdyList[OSPrioHighRdy].HeadPtr;
+
+#if OS_CFG_EDF_LIST_EN > 0u
+/* Beacuse the EDF List is not a task that is added in the ReadyList therefore manually assigning
+*  OSPrioHighRdy and OSTCBHighRdyPtr to the task with least Deadline in thr EDFList...
+*/
+    if(OSEdfList.NbrEntries > (OS_OBJ_QTY)0u){              /* List is not Empty...                                    */
+      if(OSPrioHighRdy > (OS_PRIO)OS_CFG_EDF_LIST_PRIO){    /* less than EDFList Priority...                           */
+        OSPrioHighRdy = (OS_PRIO)OS_CFG_EDF_LIST_PRIO;
+        OSTCBHighRdyPtr = OSEdfList.HeadPtr;
+      }
+    }
+#endif
+
     if (OSTCBHighRdyPtr == OSTCBCurPtr) {                   /* Current task is still highest priority task?           */
         CPU_INT_EN();                                       /* Yes ... no need to context switch                      */
         return;
@@ -403,14 +429,14 @@ void  OSSched (void)
       (OSTCBHighRdyPtr != &OSTickTaskTCB) && \
       (OSTCBHighRdyPtr != &OSTmrTaskTCB)){
         
-      if(OSTaskLogCtr >= OS_CFG_TASK_LOG_LEN){
+      if(OSTaskLogCtr >= OS_CFG_TASK_LOG_BUFFER_SIZE){
         OSTaskLogCtr = 0;
       }
 
       // Log starts from index 1
       OSTaskLogCtr++;
       OSTaskLogPtr[OSTaskLogCtr].TaskTCB = OSTCBHighRdyPtr;
-      OSTaskLogPtr[OSTaskLogCtr].TCBName = OSTCBHighRdyPtr->NamePtr;
+//      OSTaskLogPtr[OSTaskLogCtr].TCBName = OSTCBHighRdyPtr->NamePtr;
       OSTaskLogPtr[OSTaskLogCtr].TickCtr = OSTickCtr;
     }
 #endif
@@ -2647,11 +2673,14 @@ void   OS_TaskRdy (OS_TCB *p_tcb)
     }
 }
 
+
+#if OS_CFG_EDF_LIST_EN > 0u
+
 /*$PAGE*/
 /*
 ************************************************************************************************************************
 *                                                    INITIALIZATION
-*                                               READY LIST INITIALIZATION
+*                                               EDF LIST INITIALIZATION
 *
 * Description: This function is called by OSInit() to initialize the ready list.  The ready list contains a list of all
 *              the tasks that are ready to run.  The list is actually an array of OS_RDY_LIST.  An OS_RDY_LIST contains
@@ -2690,12 +2719,121 @@ void   OS_TaskRdy (OS_TCB *p_tcb)
 ************************************************************************************************************************
 */
 
-#if OS_CFG_EDF_LIST_EN > 0u
 void  OS_EdfListInit (void)
 {
     /* Initialize the array of OS_RDY_LIST at each priority   */
     OSEdfList.HeadPtr    = (OS_TCB   *)0;
     OSEdfList.TailPtr    = (OS_TCB   *)0;
-    OSEdfList.NbrEntries = (OS_OBJ_QTY)0;
+    OSEdfList.NbrEntries = (OS_OBJ_QTY)0U;
 }
+
+
+/*$PAGE*/
+/*
+************************************************************************************************************************
+*                                       INSERT TCB INTO EDF LIST IN APPROPRIATE LOCATION
+*
+* Description: Insert a TCB into EDF List in appropriate location.
+*
+*              [TODO] more description...
+*
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Note(s)    : This function is INTERNAL to uC/OS-III and your application should not call it.
+************************************************************************************************************************
+*/
+
+void OS_EDFListInsert(OS_TCB *NewTCB){
+  OS_TCB *OSEdfListPtr = (&OSEdfList)->HeadPtr;
+  
+  //  case-1: when list is Empty
+  //  Adjust the Head and Tail...
+  if(OSEdfList.NbrEntries == (OS_OBJ_QTY)0u){
+    OSEdfList.HeadPtr = NewTCB;
+    OSEdfList.TailPtr = NewTCB;
+  }
+
+  //  case-2: when NewTCB->Deadline == OSEdfList.HeadPtr->Deadline
+  //  must put this NewTCB after the OSEdfList.HeadPtr ...
+  //  because it might be the Repeater_Task_TCB as it is done in ReadyList too
+  else if(NewTCB->Deadline == OSEdfList.HeadPtr->Deadline){
+    OSEdfList.HeadPtr->NextPtr->PrevPtr = NewTCB;
+    NewTCB->NextPtr = OSEdfList.HeadPtr->NextPtr;
+    NewTCB->PrevPtr = OSEdfList.HeadPtr;
+    OSEdfList.HeadPtr->NextPtr = NewTCB;
+  }
+
+  //  case-3: when NewTCB->Deadline < OSEdfList.HeadPtr->Deadline
+  //  Insert the NewTCB at the HeadPtr and shift the Prev_TCB to right...
+  else if(NewTCB->Deadline < OSEdfList.HeadPtr->Deadline){
+    NewTCB->NextPtr =  OSEdfList.HeadPtr;
+    OSEdfList.HeadPtr->PrevPtr = NewTCB;
+    OSEdfList.HeadPtr = NewTCB;
+  }
+  
+  //  case-4: when NewTCB->Deadline > OSEdfList.HeadPtr->Deadline
+  //  Before traversing check it is >= to TailPtr->Deadline than adjust this with TailPtr...
+  //  else traverse from Head to find Finded_TCB_Deadline >= NewTCB_Deadline
+  //  and insert the NewTCB before that Task...
+  else if(NewTCB->Deadline > OSEdfList.HeadPtr->Deadline){
+    if(NewTCB->Deadline >= OSEdfList.TailPtr->Deadline){ // checking with Tail...
+      OSEdfList.TailPtr->NextPtr = NewTCB;
+      NewTCB->PrevPtr = OSEdfList.TailPtr;
+      OSEdfList.TailPtr = NewTCB;
+    }
+    else{
+      while(OSEdfListPtr->Deadline <= NewTCB->Deadline){ // get the task with > Deadline...
+        OSEdfListPtr = OSEdfListPtr->NextPtr;
+      }
+      OSEdfListPtr->PrevPtr->NextPtr = NewTCB;
+      NewTCB->PrevPtr = OSEdfListPtr->PrevPtr;
+      NewTCB->NextPtr = OSEdfListPtr;
+      OSEdfListPtr->PrevPtr = NewTCB;
+    }
+  }
+  
+  OSEdfList.NbrEntries++;
+}
+
+
+/*$PAGE*/
+/*
+************************************************************************************************************************
+*                                       REMOVE TCB FROM EDF LIST 
+*
+* Description: Remove a TCB from EDF List.
+*
+*              [TODO] more description...
+*
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Note(s)    : This function is INTERNAL to uC/OS-III and your application should not call it.
+************************************************************************************************************************
+*/
+
+void  OS_EDFListRemove (OS_TCB *NewTCB){
+  
+  if(NewTCB->NextPtr != 0){
+    NewTCB->NextPtr->PrevPtr = NewTCB->PrevPtr;
+  }
+  if(NewTCB->PrevPtr != 0){
+    NewTCB->PrevPtr->NextPtr = NewTCB->NextPtr;
+  }
+  if(NewTCB == OSEdfList.HeadPtr){
+    OSEdfList.HeadPtr = NewTCB->NextPtr;
+  }
+  NewTCB->NextPtr = 0;
+  NewTCB->PrevPtr = 0;
+  
+  OSEdfList.NbrEntries--;
+}
+
 #endif
+
+

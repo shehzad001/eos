@@ -1061,7 +1061,7 @@ struct  os_tmr_spoke {
 #if OS_CFG_TASK_LOG_EN > 0u
 struct os_task_log {
     OS_TCB              *TaskTCB;
-    CPU_CHAR            *TCBName;
+//    CPU_CHAR            *TCBName;
     OS_TICK              TickCtr;
 };
 #endif
@@ -1226,7 +1226,7 @@ OS_EXT            OS_TCB                *OSTCBCurPtr;                 /* Pointer
 OS_EXT            OS_TCB                *OSTCBHighRdyPtr;             /* Pointer to highest priority  TCB             */
 
 #if OS_CFG_TASK_LOG_EN > 0u
-OS_EXT            OS_TASK_LOG            OSTaskLogPtr[OS_CFG_TASK_LOG_LEN]; // Ring Buffer of lenght 32
+OS_EXT            OS_TASK_LOG            OSTaskLogPtr[OS_CFG_TASK_LOG_BUFFER_SIZE]; // Ring Buffer of lenght 32
 OS_EXT            CPU_INT32U             OSTaskLogCtr;
 #endif
 
@@ -1631,7 +1631,7 @@ void          OSTaskCreate              (OS_TCB                *p_tcb,
                                          OS_TICK                time_quanta,
                                          void                  *p_ext,
                                          OS_OPT                 opt,
-                                         OS_TICK        TaskDeadline,
+                                         OS_TICK                TaskDeadline,
                                          OS_ERR                *p_err);
 
 #if OS_CFG_TASK_DEL_EN > 0u

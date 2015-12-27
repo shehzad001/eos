@@ -247,6 +247,7 @@ void  OSTaskCreate (OS_TCB        *p_tcb,
                     OS_TICK        time_quanta,
                     void          *p_ext,
                     OS_OPT         opt,
+                    OS_TICK        TaskDeadline,
                     OS_ERR        *p_err)
 {
     CPU_STK_SIZE   i;
@@ -356,8 +357,20 @@ void  OSTaskCreate (OS_TCB        *p_tcb,
 
     p_tcb->NamePtr       = p_name;                          /* Save task name                                         */
 
-    p_tcb->Prio          = prio;                            /* Save the task's priority                               */
+    p_tcb->Opt           = opt;                             /* Save task options                                      */
 
+#if OS_CFG_EDF_LIST_EN > 0u
+    if((opt & OS_OPT_EDF_LIST) == OS_OPT_EDF_LIST){
+        p_tcb->Prio      = (OS_PRIO)OS_CFG_EDF_LIST_PRIO;   /* Save the task's priority equal to EDF List priority    */
+        p_tcb->Deadline  = (OS_TICK)(OSTickCtr + TaskDeadline - (OSTickCtr % TaskDeadline));
+    }
+    else{
+        p_tcb->Prio      = prio;                            /* Save the task's priority                               */
+    }
+#else
+    p_tcb->Prio          = prio;                            /* Save the task's priority                               */
+#endif
+    
     p_tcb->StkPtr        = p_sp;                            /* Save the new top-of-stack pointer                      */
     p_tcb->StkLimitPtr   = p_stk_limit;                     /* Save the stack limit pointer                           */
 
@@ -389,8 +402,15 @@ void  OSTaskCreate (OS_TCB        *p_tcb,
 
                                                             /* --------------- ADD TASK TO READY LIST --------------- */
     OS_CRITICAL_ENTER();
-    OS_PrioInsert(p_tcb->Prio);
-    OS_RdyListInsertTail(p_tcb);
+    
+    // If task opted for EDFList add it to EDFList otherwise to RdyList...
+    if((opt & OS_OPT_EDF_LIST) == OS_OPT_EDF_LIST){
+      OS_EDFListInsert(p_tcb);
+    }
+    else{
+      OS_PrioInsert(p_tcb->Prio);
+      OS_RdyListInsertTail(p_tcb);
+    }
 
 #if OS_CFG_DBG_EN > 0u
     OS_TaskDbgListAdd(p_tcb);
@@ -472,7 +492,12 @@ void  OSTaskDel (OS_TCB  *p_tcb,
     OS_CRITICAL_ENTER();
     switch (p_tcb->TaskState) {
         case OS_TASK_STATE_RDY:
-             OS_RdyListRemove(p_tcb);
+			 if((p_tcb->Opt & OS_OPT_EDF_LIST) == OS_OPT_EDF_LIST){
+               OS_EDFListRemove(p_tcb);
+			 }
+			 else{
+               OS_RdyListRemove(p_tcb);
+			 }
              break;
 
         case OS_TASK_STATE_SUSPENDED:
@@ -2006,6 +2031,10 @@ void  OS_TaskInitTCB (OS_TCB *p_tcb)
     p_tcb->DbgPrevPtr         = (OS_TCB        *)0;
     p_tcb->DbgNextPtr         = (OS_TCB        *)0;
     p_tcb->DbgNamePtr         = (CPU_CHAR      *)((void *)" ");
+#endif
+    
+#if OS_CFG_EDF_LIST_EN > 0u
+    p_tcb->Deadline           = (OS_TICK        )0;
 #endif
 }
 

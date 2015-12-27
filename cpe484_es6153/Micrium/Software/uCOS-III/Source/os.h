@@ -329,6 +329,7 @@ extern "C" {
 #define  OS_OPT_TASK_STK_CHK                 (OS_OPT)(0x0001u)  /* Enable stack checking for the task                 */
 #define  OS_OPT_TASK_STK_CLR                 (OS_OPT)(0x0002u)  /* Clear the stack when the task is create            */
 #define  OS_OPT_TASK_SAVE_FP                 (OS_OPT)(0x0004u)  /* Save the contents of any floating-point registers  */
+#define  OS_OPT_EDF_LIST                     (OS_OPT)(0x0008u)  /* Option to opt for an EDF List                      */
 
 /*
 ------------------------------------------------------------------------------------------------------------------------
@@ -637,6 +638,10 @@ typedef  struct  os_tcb              OS_TCB;
 
 typedef  struct  os_rdy_list         OS_RDY_LIST;
 
+#if OS_CFG_EDF_LIST_EN > 0u
+typedef  struct  os_edf_list         OS_EDF_LIST;
+#endif
+
 typedef  struct  os_tick_spoke       OS_TICK_SPOKE;
 
 typedef  void                      (*OS_TMR_CALLBACK_PTR)(void *p_tmr, void *p_arg);
@@ -651,6 +656,10 @@ typedef  struct  os_pend_obj         OS_PEND_OBJ;
 #if OS_CFG_APP_HOOKS_EN > 0u
 typedef  void                      (*OS_APP_HOOK_VOID)(void);
 typedef  void                      (*OS_APP_HOOK_TCB)(OS_TCB *p_tcb);
+#endif
+
+#if OS_CFG_TASK_LOG_EN > 0u
+typedef  struct  os_task_log         OS_TASK_LOG;
 #endif
 
 /*$PAGE*/
@@ -693,6 +702,20 @@ struct  os_rdy_list {
     OS_OBJ_QTY           NbrEntries;                        /* Number of entries             at selected priority     */
 };
 
+
+/*
+------------------------------------------------------------------------------------------------------------------------
+*                                                      EDF LIST
+------------------------------------------------------------------------------------------------------------------------
+*/
+
+#if OS_CFG_EDF_LIST_EN > 0u
+struct os_edf_list {
+    OS_TCB              *HeadPtr;                           /* Pointer to task that will run at selected deadline     */
+    OS_TCB              *TailPtr;                           /* Pointer to last task          at selected deadline     */
+    OS_OBJ_QTY           NbrEntries;                        /* Number of entries in EDF List                          */
+};
+#endif
 
 /*
 ------------------------------------------------------------------------------------------------------------------------
@@ -905,7 +928,7 @@ struct os_tcb {
     OS_PRIO              Prio;                              /* Task priority (0 == highest)                           */
     CPU_STK_SIZE         StkSize;                           /* Size of task stack (in number of stack elements)       */
     OS_OPT               Opt;                               /* Task options as passed by OSTaskCreate()               */
-
+    
     OS_OBJ_QTY           PendDataTblEntries;                /* Size of array of objects to pend on                    */
 
     CPU_TS               TS;                                /* Timestamp                                              */
@@ -976,6 +999,10 @@ struct os_tcb {
     OS_TCB              *DbgNextPtr;
     CPU_CHAR            *DbgNamePtr;
 #endif
+
+#if OS_CFG_EDF_LIST_EN > 0u
+    OS_TICK              Deadline;
+#endif
 };
 
 /*$PAGE*/
@@ -1024,6 +1051,20 @@ struct  os_tmr_spoke {
     OS_OBJ_QTY           NbrEntries;
     OS_OBJ_QTY           NbrEntriesMax;
 };
+
+/*
+------------------------------------------------------------------------------------------------------------------------
+*                                                   TASK LOG
+------------------------------------------------------------------------------------------------------------------------
+*/
+
+#if OS_CFG_TASK_LOG_EN > 0u
+struct os_task_log {
+    OS_TCB              *TaskTCB;
+//    CPU_CHAR            *TCBName;
+    OS_TICK              TickCtr;
+};
+#endif
 
 /*$PAGE*/
 /*
@@ -1111,10 +1152,13 @@ OS_EXT            OS_OBJ_QTY             OSQQty;                      /* Number 
 #endif
 
 
-
                                                                       /* READY LIST --------------------------------- */
 OS_EXT            OS_RDY_LIST            OSRdyList[OS_CFG_PRIO_MAX];  /* Table of tasks ready to run                  */
 
+
+#if OS_CFG_EDF_LIST_EN > 0u                                           /* EDF LIST ----------------------------------- */
+OS_EXT            OS_EDF_LIST            OSEdfList;                   /* Start of EDF List -------------------------- */
+#endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
 OS_EXT            CPU_BOOLEAN            OSSafetyCriticalStartFlag;   /* Flag indicating that all init. done          */
@@ -1180,6 +1224,11 @@ OS_EXT            OS_CTR                 OSTmrUpdateCtr;
                                                                       /* TCBs --------------------------------------- */
 OS_EXT            OS_TCB                *OSTCBCurPtr;                 /* Pointer to currently running TCB             */
 OS_EXT            OS_TCB                *OSTCBHighRdyPtr;             /* Pointer to highest priority  TCB             */
+
+#if OS_CFG_TASK_LOG_EN > 0u
+OS_EXT            OS_TASK_LOG            OSTaskLogPtr[OS_CFG_TASK_LOG_BUFFER_SIZE]; // Ring Buffer of lenght 32
+OS_EXT            CPU_INT32U             OSTaskLogCtr;
+#endif
 
 /*$PAGE*/
 /*
@@ -1378,6 +1427,7 @@ void          OS_MemInit                (OS_ERR                *p_err);
 
 void          OSMutexCreate             (OS_MUTEX              *p_mutex,
                                          CPU_CHAR              *p_name,
+                                         OS_TCB               **p_tcb,
                                          OS_ERR                *p_err);
 
 #if OS_CFG_MUTEX_DEL_EN > 0u
@@ -1582,6 +1632,7 @@ void          OSTaskCreate              (OS_TCB                *p_tcb,
                                          OS_TICK                time_quanta,
                                          void                  *p_ext,
                                          OS_OPT                 opt,
+                                         OS_TICK                TaskDeadline,
                                          OS_ERR                *p_err);
 
 #if OS_CFG_TASK_DEL_EN > 0u
@@ -1998,6 +2049,10 @@ void          OS_RdyListInsertTail      (OS_TCB                *p_tcb);
 void          OS_RdyListMoveHeadToTail  (OS_RDY_LIST           *p_rdy_list);
 
 void          OS_RdyListRemove          (OS_TCB                *p_tcb);
+
+/* ---------------------------------------------- EDF LIST MANAGEMENT ----------------------------------------------- */
+
+void          OS_EdfListInit            (void);
 
 /* ---------------------------------------------- PEND LIST MANAGEMENT ---------------------------------------------- */
 

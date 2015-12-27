@@ -1,0 +1,7 @@
+Explanation on why the log a little different from expected log:
+-----------------------------------------------------------------
+
+In our application, T3 run for about 2756 ticks instead of 3000 ticks.
+
+Hence, it will be completed at ticks of 7836 instead of 8xxx, 
+and the log will show "7" instead of "8" for second deletion of T2.
